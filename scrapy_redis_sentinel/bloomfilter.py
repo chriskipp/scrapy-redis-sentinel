@@ -25,7 +25,8 @@ class BloomFilter(object):
         :param bit: m = 2 ^ bit
         :param hash_number: the number of hash function
         """
-        # default to 1 << 30 = 10,7374,1824 = 2^30 = 128MB, max filter 2^30/hash_number = 1,7895,6970 fingerprints
+        # default to 1 << 30 = 10,7374,1824 = 2^30 = 128MB, max filter
+        # 2^30/hash_number = 1,7895,6970 fingerprints
         self.m = 1 << bit
         self.seeds = range(hash_number)
         self.server = server

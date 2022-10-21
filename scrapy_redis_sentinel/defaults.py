@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 import redis
-import os
 import rediscluster
+from mob_scrapy_redis_sentinel import inner_ip
 from redis.sentinel import Sentinel
-
-from mob_scrapy_redis_sentinel import inner_ip, mob_log
 
 # For standalone use.
 DUPEFILTER_KEY = "dupefilter:%(timestamp)s"
 
 PIPELINE_KEY = "%(spider)s:items"
 
-STATS_KEY = '%(spider)s:stats'
+STATS_KEY = "%(spider)s:stats"
 
 REDIS_CLS = redis.StrictRedis
 REDIS_CLUSTER_CLS = rediscluster.RedisCluster
@@ -23,13 +21,15 @@ REDIS_PARAMS = {
     "socket_timeout": 30,
     "socket_connect_timeout": 30,
     "retry_on_timeout": True,
-    "encoding": REDIS_ENCODING
+    "encoding": REDIS_ENCODING,
 }
 
 SCHEDULER_QUEUE_KEY = "%(spider)s:requests"
 SCHEDULER_QUEUE_CLASS = "mob_scrapy_redis_sentinel.queue.PriorityQueue"
 SCHEDULER_DUPEFILTER_KEY = "%(spider)s:dupefilter"
-SCHEDULER_DUPEFILTER_CLASS = "mob_scrapy_redis_sentinel.dupefilter.RedisDupeFilter"
+SCHEDULER_DUPEFILTER_CLASS = (
+    "mob_scrapy_redis_sentinel.dupefilter.RedisDupeFilter"
+)
 
 SCHEDULER_PERSIST = False
 
@@ -58,7 +58,7 @@ POP_MESSAGE = MQ_HOST + "/rest/ms/GemMQ/popMessage?queueName={queueName}"
 GET_QUEUE_SIZE = MQ_HOST + "/rest/ms/GemMQ/getQueueSize?queueName={queueName}"
 
 # 与环境相关的配置
-PRODUCTION_ENV_TAG = '10.90'
+PRODUCTION_ENV_TAG = "10.90"
 # 不是以10.90开头的，认为是非生产环境
 if inner_ip.startswith(PRODUCTION_ENV_TAG):
     QUEUE_NAME_PREFIX = "CRAWLER-UQ-{}"

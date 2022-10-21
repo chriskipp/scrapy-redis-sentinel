@@ -12,7 +12,6 @@ from .connection import from_settings
 logger = logging.getLogger(__name__)
 
 
-
 class RedisDupeFilter(BaseDupeFilter):
     """Redis-based request duplicates filter.
 
@@ -119,7 +118,9 @@ class RedisDupeFilter(BaseDupeFilter):
     def from_spider(cls, spider):
         settings = spider.settings
         server = from_settings(settings)
-        dupefilter_key = settings.get("SCHEDULER_DUPEFILTER_KEY", defaults.SCHEDULER_DUPEFILTER_KEY)
+        dupefilter_key = settings.get(
+            "SCHEDULER_DUPEFILTER_KEY", defaults.SCHEDULER_DUPEFILTER_KEY
+        )
         key = dupefilter_key % {"spider": spider.name}
         debug = settings.getbool("DUPEFILTER_DEBUG")
         return cls(server, key=key, debug=debug)
@@ -149,14 +150,18 @@ class RedisDupeFilter(BaseDupeFilter):
         """
         if self.debug:
             msg = "Filtered duplicate request: %(request)s"
-            self.logger.debug(msg, {"request": request}, extra={"spider": spider})
+            self.logger.debug(
+                msg, {"request": request}, extra={"spider": spider}
+            )
         elif self.logdupes:
             msg = (
                 "Filtered duplicate request %(request)s"
                 " - no more duplicates will be shown"
                 " (see DUPEFILTER_DEBUG to show all duplicates)"
             )
-            self.logger.debug(msg, {"request": request}, extra={"spider": spider})
+            self.logger.debug(
+                msg, {"request": request}, extra={"spider": spider}
+            )
             self.logdupes = False
 
         spider.crawler.stats.inc_value("dupefilter/filtered", spider=spider)
@@ -220,7 +225,13 @@ class RedisBloomFilter(BaseDupeFilter):
         debug = settings.getbool("DUPEFILTER_DEBUG", False)
         bit = settings.getint("BLOOMFILTER_BIT", 30)
         hash_number = settings.getint("BLOOMFILTER_HASH_NUMBER", 6)
-        return cls(server=server, key=key, debug=debug, bit=bit, hash_number=hash_number)
+        return cls(
+            server=server,
+            key=key,
+            debug=debug,
+            bit=bit,
+            hash_number=hash_number,
+        )
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -295,13 +306,17 @@ class RedisBloomFilter(BaseDupeFilter):
         """
         if self.debug:
             msg = "Filtered duplicate request: %(request)s"
-            self.logger.debug(msg, {"request": request}, extra={"spider": spider})
+            self.logger.debug(
+                msg, {"request": request}, extra={"spider": spider}
+            )
         elif self.logdupes:
             msg = (
                 "Filtered duplicate request %(request)s"
                 " - no more duplicates will be shown"
                 " (see DUPEFILTER_DEBUG to show all duplicates)"
             )
-            self.logger.debug(msg, {"request": request}, extra={"spider": spider})
+            self.logger.debug(
+                msg, {"request": request}, extra={"spider": spider}
+            )
             self.logdupes = False
         spider.crawler.stats.inc_value("bloomfilter/filtered", spider=spider)

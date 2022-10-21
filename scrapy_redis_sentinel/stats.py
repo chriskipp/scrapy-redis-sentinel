@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from scrapy.statscollectors import StatsCollector
-from .connection import from_settings as redis_from_settings
-from .defaults import STATS_KEY, SCHEDULER_PERSIST
 from datetime import datetime
+
+from scrapy.statscollectors import StatsCollector
+
+from .connection import from_settings as redis_from_settings
+from .defaults import SCHEDULER_PERSIST, STATS_KEY
 
 
 class RedisStatsCollector(StatsCollector):
@@ -16,7 +18,9 @@ class RedisStatsCollector(StatsCollector):
         self.spider = spider
         self.spider_name = spider.name if spider else crawler.spidercls.name
         self.stats_key = crawler.settings.get("STATS_KEY", STATS_KEY)
-        self.persist = crawler.settings.get("SCHEDULER_PERSIST", SCHEDULER_PERSIST)
+        self.persist = crawler.settings.get(
+            "SCHEDULER_PERSIST", SCHEDULER_PERSIST
+        )
 
     def _get_key(self, spider=None):
         """Return the hash name of stats"""

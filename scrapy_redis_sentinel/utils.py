@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-import six
 from hashlib import md5
+
+import six
 
 
 def bytes_to_str(s, encoding="utf-8"):
@@ -14,11 +15,11 @@ def make_md5(text):
     """
     make text to md5
     """
-    return md5(str(text).encode('utf-8')).hexdigest()
+    return md5(str(text).encode("utf-8")).hexdigest()
 
 
 def get_track_id(request):
-    track_id = ''
+    track_id = ""
     try:
         track_id = request.meta.get("track_id")
     except Exception:

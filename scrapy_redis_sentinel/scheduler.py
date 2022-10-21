@@ -2,12 +2,11 @@
 import importlib
 
 import six
+from mob_scrapy_redis_sentinel import mob_log
+from mob_scrapy_redis_sentinel.utils import get_track_id
 from scrapy.utils.misc import load_object
 
 from . import connection, defaults
-
-from mob_scrapy_redis_sentinel import mob_log
-from mob_scrapy_redis_sentinel.utils import get_track_id
 
 
 # TODO: add SCRAPY_JOB support.
@@ -36,16 +35,16 @@ class Scheduler(object):
     """
 
     def __init__(
-            self,
-            server,
-            persist=False,
-            flush_on_start=False,
-            queue_key=defaults.SCHEDULER_QUEUE_KEY,
-            queue_cls=defaults.SCHEDULER_QUEUE_CLASS,
-            dupefilter_key=defaults.SCHEDULER_DUPEFILTER_KEY,
-            dupefilter_cls=defaults.SCHEDULER_DUPEFILTER_CLASS,
-            idle_before_close=0,
-            serializer=None
+        self,
+        server,
+        persist=False,
+        flush_on_start=False,
+        queue_key=defaults.SCHEDULER_QUEUE_KEY,
+        queue_cls=defaults.SCHEDULER_QUEUE_CLASS,
+        dupefilter_key=defaults.SCHEDULER_DUPEFILTER_KEY,
+        dupefilter_cls=defaults.SCHEDULER_DUPEFILTER_CLASS,
+        idle_before_close=0,
+        serializer=None,
     ):
         """Initialize scheduler.
 
@@ -91,7 +90,9 @@ class Scheduler(object):
         kwargs = {
             "persist": settings.getbool("SCHEDULER_PERSIST"),
             "flush_on_start": settings.getbool("SCHEDULER_FLUSH_ON_START"),
-            "idle_before_close": settings.getint("SCHEDULER_IDLE_BEFORE_CLOSE")
+            "idle_before_close": settings.getint(
+                "SCHEDULER_IDLE_BEFORE_CLOSE"
+            ),
         }
 
         # If these values are missing, it means we want to use the defaults.
@@ -103,7 +104,7 @@ class Scheduler(object):
             "dupefilter_key": "SCHEDULER_DUPEFILTER_KEY",
             # We use the default setting name to keep compatibility.
             "dupefilter_cls": "DUPEFILTER_CLASS",
-            "serializer": "SCHEDULER_SERIALIZER"
+            "serializer": "SCHEDULER_SERIALIZER",
         }
         for name, setting_name in optional.items():
             val = settings.get(setting_name)
@@ -112,7 +113,9 @@ class Scheduler(object):
 
         # Support serializer as a path to a module.
         if isinstance(kwargs.get("serializer"), six.string_types):
-            kwargs["serializer"] = importlib.import_module(kwargs["serializer"])
+            kwargs["serializer"] = importlib.import_module(
+                kwargs["serializer"]
+            )
 
         server = connection.from_settings(settings)
         if not settings.get("REDIS_STARTUP_NODES", False):
@@ -138,7 +141,9 @@ class Scheduler(object):
                 serializer=self.serializer,
             )
         except TypeError as e:
-            raise ValueError("Failed to instantiate queue class '%s': %s", self.queue_cls, e)
+            raise ValueError(
+                "Failed to instantiate queue class '%s': %s", self.queue_cls, e
+            )
 
         try:
             self.df = load_object(self.dupefilter_cls)(
@@ -146,16 +151,24 @@ class Scheduler(object):
                 key=self.dupefilter_key % {"spider": spider.name},
                 debug=spider.settings.getbool("DUPEFILTER_DEBUG", False),
                 bit=spider.settings.getint("BLOOMFILTER_BIT", 30),
-                hash_number=spider.settings.getint("BLOOMFILTER_HASH_NUMBER", 6),
+                hash_number=spider.settings.getint(
+                    "BLOOMFILTER_HASH_NUMBER", 6
+                ),
             )
         except TypeError as e:
-            raise ValueError("Failed to instantiate dupefilter class '%s': %s", self.dupefilter_cls, e)
+            raise ValueError(
+                "Failed to instantiate dupefilter class '%s': %s",
+                self.dupefilter_cls,
+                e,
+            )
 
         if self.flush_on_start:
             self.flush()
         # notice if there are requests already in the queue to resume the crawl
         if len(self.queue):
-            spider.log("Resuming crawl (%d requests scheduled)" % len(self.queue))
+            spider.log(
+                "Resuming crawl (%d requests scheduled)" % len(self.queue)
+            )
 
     def close(self, reason):
         if not self.persist:
@@ -170,7 +183,9 @@ class Scheduler(object):
             self.df.log(request, self.spider)
             return False
         if self.stats:
-            self.stats.inc_value("scheduler/enqueued/redis", spider=self.spider)
+            self.stats.inc_value(
+                "scheduler/enqueued/redis", spider=self.spider
+            )
         self.queue.push(request)
         return True
 
@@ -179,8 +194,12 @@ class Scheduler(object):
         request = self.queue.pop(block_pop_timeout)
 
         if request and self.stats:
-            mob_log.info(f"get request from next_request: spider name: {self.spider.name}, {request.__dict__}").track_id(get_track_id(request)).commit()
-            self.stats.inc_value("scheduler/dequeued/redis", spider=self.spider)
+            mob_log.info(
+                f"get request from next_request: spider name: {self.spider.name}, {request.__dict__}"
+            ).track_id(get_track_id(request)).commit()
+            self.stats.inc_value(
+                "scheduler/dequeued/redis", spider=self.spider
+            )
         return request
 
     def has_pending_requests(self):

@@ -20,7 +20,12 @@ class RedisPipeline(object):
 
     """
 
-    def __init__(self, server, key=defaults.PIPELINE_KEY, serialize_func=default_serialize):
+    def __init__(
+        self,
+        server,
+        key=defaults.PIPELINE_KEY,
+        serialize_func=default_serialize,
+    ):
         """Initialize pipeline.
 
         Parameters
@@ -43,7 +48,9 @@ class RedisPipeline(object):
         if settings.get("REDIS_ITEMS_KEY"):
             params["key"] = settings["REDIS_ITEMS_KEY"]
         if settings.get("REDIS_ITEMS_SERIALIZER"):
-            params["serialize_func"] = load_object(settings["REDIS_ITEMS_SERIALIZER"])
+            params["serialize_func"] = load_object(
+                settings["REDIS_ITEMS_SERIALIZER"]
+            )
 
         return cls(**params)
 
