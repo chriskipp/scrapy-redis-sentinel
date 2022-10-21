@@ -1,141 +1,143 @@
-# scrapy-redis 集群版
+# scrapy-redis cluster version
 
 ![PyPI](https://img.shields.io/pypi/v/scrapy-redis-sentinel)
 ![PyPI - License](https://img.shields.io/pypi/l/scrapy-redis-sentinel)
 ![GitHub last commit](https://img.shields.io/github/last-commit/crawlmap/scrapy-redis-sentinel)
 ![PyPI - Downloads](https://img.shields.io/pypi/dw/scrapy-redis-sentinel)
 
-本项目基于原项目 [scrapy-redis-sentinel](https://github.com/crawlaio/scrapy-redis-sentinel)
+This project is based on the original project [scrapy-redis-sentinel](https://github.com/crawlaio/scrapy-redis-sentinel)
 
-进行修改，修改内容如下：
+Make changes, the changes are as follows:
 
-1. 添加了 Redis 哨兵，存在2个密码连接的支持
-2. 支持Python3.8+(collection.abc的引入方式)
-3. 填补 `dupefilter.py` 丢失的 "dupefilter/filtered" 的stats，利于爬虫进度数据分析
-4. 自动添加 track_id: "make request from data" 和 "get request from next_request "
-5. 增加任务防丢: 每次备份上一次任务，启动爬虫时，任务回队列首。`defaults.LATEST_QUEUE_KEY`
-6. 增加使用shield进行任务调度: `MQ_USED`
------
+1. Added Redis Sentinel, there is support for 2 password connections
+2. Support Python3.8+ (introduction of collection.abc)
+3. Fill in the missing "dupefilter/filtered" stats in `dupefilter.py`, which is helpful for crawler progress data analysis
+4. Automatically add track_id: "make request from data" and "get request from next_request"
+5. Added task loss prevention: every time the last task is backed up and the crawler is started, the task will return to the top of the queue. `defaults.LATEST_QUEUE_KEY`
+6. Add task scheduling using shield: `MQ_USED`
 
-本项目基于原项目 [scrapy-redis](https://github.com/rmax/scrapy-redis)
 
-进行修改，修改内容如下：
+This project is based on the original project [scrapy-redis](https://github.com/rmax/scrapy-redis)
 
-1. 添加了 `Redis` 哨兵连接支持
-2. 添加了 `Redis` 集群连接支持
-3. 添加了 `Bloomfilter` 去重
+Make changes, the changes are as follows:
 
-## 安装
+1. Added `Redis` sentinel connection support
+2. Added `Redis` cluster connection support
+3. Added `Bloomfilter` deduplication
+
+## Install
 
 ```bash
-pip install scrapy-redis-sentinel --user
+python3 -m pip install scrapy-redis-sentinel --user
 ```
 
-## 配置示例
+## Configuration example
 
-> 原版本 scrapy-redis 的所有配置都支持, 优先级：哨兵模式 > 集群模式 > 单机模式
+All configurations of the original scrapy-redis are supported, priority: Sentinel mode > Cluster mode > Stand-alone mode
 
 ```python
-# ----------------------------------------Bloomfilter 配置-------------------------------------
-# 使用的哈希函数数，默认为 6
+# ----------------------------------------Bloomfilter configuration------- ------------------------------
+# Number of hash functions to use, default is 6
 BLOOMFILTER_HASH_NUMBER = 6
 
-# Bloomfilter 使用的 Redis 内存位，30 表示 2 ^ 30 = 128MB，默认为 30   (2 ^ 22 = 1MB 可去重 130W URL)
+# Redis memory bit used by Bloomfilter, 30 means 2 ^ 30 u003d 128MB, default is 30 (2 ^ 22 u003d 1MB can deduplicate 130W URL)
 BLOOMFILTER_BIT = 30
 
-# 是否开启去重调试模式 默认为 False 关闭
+# Whether to enable deduplication debugging mode default is False off
 DUPEFILTER_DEBUG = False
 
-# ----------------------------------------Redis 单机模式-------------------------------------
-# Redis 单机地址
+# -----------------------------------------Redis stand-alone mode------ -------------------------------
+# Redis stand-alone address
 REDIS_HOST = "172.25.2.25"
 REDIS_PORT = 6379
 
-# REDIS 单机模式配置参数
+# REDIS stand-alone mode configuration parameters
 REDIS_PARAMS = {
-    "password": "password",
-    "db": 0
+  "password": "password",
+  "db": 0
 }
 
-# ----------------------------------------Redis 哨兵模式-------------------------------------
+# ----------------------------------------Redis Sentinel Mode------ -------------------------------
 
-# Redis 哨兵地址
+# Redis sentinel address
 REDIS_SENTINELS = [
-    ('172.25.2.25', 26379),
-    ('172.25.2.26', 26379),
-    ('172.25.2.27', 26379)
+  ('172.25.2.25', 26379),
+  ('172.25.2.26', 26379),
+  ('172.25.2.27', 26379)
 ]
-# SENTINEL_KWARGS 非必须参数，可以设置sentinel密码，参考 https://github.com/redis/redis-py/issues/1219
-SENTINEL_KWARGS = {'password': 'sentinel_password'}
 
-# REDIS_SENTINEL_PARAMS 哨兵模式配置参数。
-REDIS_SENTINEL_PARAMS = {
-    "service_name": "mymaster",
-    "password": "password",
-    "db": 0
+# SENTINEL_KWARGS optional parameter, you can set sentinel password, refer to https://github.com/redis/redis-py/issues/1219
+SENTINEL_KWARGS u003d {'password': 'sentinel_password'}
+
+# REDIS_SENTINEL_PARAMS Sentinel mode configuration parameters.
+REDIS_SENTINEL_PARAMS u003d {
+  "service_name": "mymaster",
+  "password": "password",
+  "db": 0
 }
 
-# ----------------------------------------Redis 集群模式-------------------------------------
+# -------------------------------------- Redis cluster mode------ -------------------------------
 
-# Redis 集群地址
+# Redis cluster address
 REDIS_STARTUP_NODES = [
-    {"host": "172.25.2.25", "port": "6379"},
-    {"host": "172.25.2.26", "port": "6379"},
-    {"host": "172.25.2.27", "port": "6379"},
+  {"host": "172.25.2.25", "port": "6379"},
+  {"host": "172.25.2.26", "port": "6379"},
+  {"host": "172.25.2.27", "port": "6379"},
 ]
 
-# REDIS_CLUSTER_PARAMS 集群模式配置参数
-REDIS_CLUSTER_PARAMS = {
-    "password": "password"
+# REDIS_CLUSTER_PARAMS cluster mode configuration parameters
+REDIS_CLUSTER_PARAMS u003d {
+  "password": "password"
 }
 
-# ----------------------------------------Scrapy 其他参数-------------------------------------
+# -----------------------------------------Scrapy other parameters------ -------------------------------
 
-# 在 redis 中保持 scrapy-redis 用到的各个队列，从而允许暂停和暂停后恢复，也就是不清理 redis queues
+# Keep the various queues used by scrapy-redis in redis to allow pause and resume after pause, that is, do not clean up redis queues
 SCHEDULER_PERSIST = True
-# 调度队列  
+# dispatch queue
 SCHEDULER = "mob_scrapy_redis_sentinel.scheduler.Scheduler"
-# 基础去重
+# base deduplication
 DUPEFILTER_CLASS = "mob_scrapy_redis_sentinel.dupefilter.RedisDupeFilter"
-# BloomFilter
+#BloomFilter
 # DUPEFILTER_CLASS = "mob_scrapy_redis_sentinel.dupefilter.RedisBloomFilter"
 
-# 启用基于 Redis 统计信息
+# Enable Redis based statistics
 STATS_CLASS = "mob_scrapy_redis_sentinel.stats.RedisStatsCollector"
 
-# 指定排序爬取地址时使用的队列
-# 默认的 按优先级排序( Scrapy 默认)，由 sorted set 实现的一种非 FIFO、LIFO 方式。
+# Specify the queue to use when sorting and crawling addresses
+# Default sorting by priority (Scrapy default), a non-FIFO, LIFO way implemented by sorted set.
 # SCHEDULER_QUEUE_CLASS = 'mob_scrapy_redis_sentinel.queue.SpiderPriorityQueue'
-# 可选的 按先进先出排序（FIFO）
+# optional first in first out (FIFO)
 # SCHEDULER_QUEUE_CLASS = 'mob_scrapy_redis_sentinel.queue.SpiderStack'
-# 可选的 按后进先出排序（LIFO）
+# optional last in first out (LIFO)
 # SCHEDULER_QUEUE_CLASS = 'mob_scrapy_redis_sentinel.queue.SpiderStack'
 ```
 
-> 注：当使用集群时单机不生效
+> Note: Single machine does not take effect when using cluster
 
-## spiders 使用
+## spiders use
 
-**修改 RedisSpider 引入方式**
+**Modify the introduction method of RedisSpider**
 
-原版本 `scrapy-redis` 使用方式
+How to use the original version of `scrapy-redis`
 
 ```python
 from scrapy_redis.spiders import RedisSpider
 
 
 class Spider(RedisSpider):
-    ...
+...
 
 ```
 
-`scrapy-redis-sentinel` 使用方式
+How to use `scrapy-redis-sentinel`
 
 ```python
 from scrapy_redis_sentinel.spiders import RedisSpider
 
 
 class Spider(RedisSpider):
-    ...
+...
 
 ```
+
